@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2701班学生任务大转盘</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; /* 改为min-height以防小屏幕溢出 */
+            background-color: #f0f2f5;
+            font-family: sans-serif;
+            overflow: auto; /* 允许滚动以防屏幕太小 */
+        }
+
+        .wheel-container {
+            position: relative;
+            /* 尺寸扩大一倍：300px -> 600px */
+            width: 600px;
+            height: 600px;
+            margin-bottom: 30px;
+            /* 在小屏幕上自动缩放以适应宽度 */
+            max-width: 90vw; 
+            max-height: 90vw;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            display: block;
+        }
+
+        /* 指针样式 - 按比例放大 */
+        .pointer {
+            position: absolute;
+            top: -20px; /* 稍微调大间距 */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            /* 边框加粗以匹配大转盘 */
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-top: 45px solid #ff3e3e;
+            z-index: 10;
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.3));
+        }
+
+        button {
+            padding: 15px 40px;
+            font-size: 22px; /* 按钮字体稍大 */
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wheel-container">
+        <div class="pointer"></div>
+        <!-- 画布分辨率扩大一倍：600 -> 1200，保证清晰度 -->
+        <canvas id="wheelCanvas" width="1200" height="1200"></canvas>
+    </div>
+
+    <button id="spinBtn">开始旋转</button>
+
+    <script>
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const spinBtn = document.getElementById('spinBtn');
+
+        // 配置奖项和颜色
+        const segments = [
+            { text: "练字1张", color: "#FFD700" },
+            { text: "练字2张", color: "#FFFFFF" },
+            { text: "练字3张", color: "#FF6347" },
+            { text: "练字4张", color: "#FFFFFF" },
+            { text: "练字5张", color: "#87CEEB" },
+            { text: "练字6张", color: "#FFFFFF" },
+            { text: "练字7张", color: "#9370DB" },
+            { text: "练字8张", color: "#FFFFFF" }
+        ];
+
+        const numSegments = segments.length;
+        const arcSize = (2 * Math.PI) / numSegments;
+        let currentRotation = 0; 
+
+        function drawWheel() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = canvas.width / 2;
+
+            segments.forEach((segment, i) => {
+                const angle = i * arcSize;
+
+                // 绘制扇形
+                ctx.beginPath();
+                ctx.fillStyle = segment.color;
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, angle, angle + arcSize);
+                ctx.lineTo(centerX, centerY);
+                ctx.fill();
+                
+                // 绘制扇形边框（可选，增加质感）
+                ctx.strokeStyle = "#eee";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // 绘制文字
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(angle + arcSize / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#333";
+                // 字体大小扩大一倍：30 -> 60
+                ctx.font = "bold 60px Arial"; 
+                ctx.shadowColor = "rgba(255,255,255,0.8)";
+                ctx.shadowBlur = 4;
+                // 调整文字位置，避免贴边
+                ctx.fillText(segment.text, radius - 40, 20); 
+                ctx.restore();
+            });
+        }
+
+        function spin() {
+            if (spinBtn.disabled) return;
+
+            spinBtn.disabled = true;
+            
+            const randomSpins = 5 + Math.random() * 5; 
+            const randomDegree = Math.floor(Math.random() * 360);
+            const totalDegree = randomSpins * 360 + randomDegree;
+            currentRotation += totalDegree;
+
+            canvas.style.transform = `rotate(-${currentRotation}deg)`;
+
+            setTimeout(() => {
+                spinBtn.disabled = false;
+                // 这里可以添加结果计算逻辑
+                // const actualDegree = currentRotation % 360;
+                // ...
+            }, 4000); 
+        }
+
+        spinBtn.addEventListener('click', spin);
+
+        drawWheel();
+    </script>
+</body>
+</html>
